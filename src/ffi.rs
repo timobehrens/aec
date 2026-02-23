@@ -39,3 +39,27 @@ pub extern "C" fn AecDestroy(ctx: *mut Aec) {
         unsafe { drop(Box::from_raw(ctx)); }
     }
 }
+
+#[no_mangle]
+pub extern "C" fn AecPlayback(ctx: *mut Aec, play: *const i16, len: usize) {
+    assert!(!ctx.is_null());
+    let aec = unsafe { &*(ctx) };
+    let play = unsafe { std::slice::from_raw_parts(play, len) };
+    aec.playback(play);
+}
+
+#[no_mangle]
+pub extern "C" fn AecCapture(ctx: *mut Aec, rec: *const i16, out: *mut i16, len: usize) {
+    assert!(!ctx.is_null());
+    let aec = unsafe { &*(ctx) };
+    let rec = unsafe { std::slice::from_raw_parts(rec, len) };
+    let out = unsafe { std::slice::from_raw_parts_mut(out, len) };
+    aec.capture(rec, out);
+}
+
+#[no_mangle]
+pub extern "C" fn AecSetSamplingRate(ctx: *mut Aec, rate: u32) {
+    assert!(!ctx.is_null());
+    let aec = unsafe { &*(ctx) };
+    aec.set_sampling_rate(rate);
+}

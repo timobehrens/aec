@@ -44,3 +44,30 @@ pub extern "C" fn AecDestroy(aec_ptr: *mut Aec) {
         };
     }
 }
+
+#[no_mangle]
+pub extern "C" fn AecPlayback(aec_ptr: *mut Aec, play: *const i16, len: usize) {
+    if let Some(aec) = unsafe { aec_ptr.as_ref() } {
+        let play = unsafe { std::slice::from_raw_parts(play, len) };
+        aec.playback(play);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn AecCapture(aec_ptr: *mut Aec, rec: *const i16, out: *mut i16, len: usize) {
+    if let Some(aec) = unsafe { aec_ptr.as_ref() } {
+        unsafe {
+            aec.capture(
+                std::slice::from_raw_parts(rec, len),
+                std::slice::from_raw_parts_mut(out, len),
+            );
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn AecSetSamplingRate(aec_ptr: *mut Aec, rate: u32) {
+    if let Some(aec) = unsafe { aec_ptr.as_ref() } {
+        aec.set_sampling_rate(rate);
+    }
+}

@@ -76,6 +76,37 @@ impl Aec {
             }
         }
     }
+
+    /// Feed reference (playback) audio into Speex's internal ring buffer.
+    /// Use with `capture()` for async echo cancellation.
+    pub fn playback(&self, play_buffer: &[i16]) {
+        unsafe {
+            aec_rs_sys::speex_echo_playback(self.echo_state, play_buffer.as_ptr());
+        }
+    }
+
+    /// Process mic audio through Speex AEC using internally buffered reference.
+    /// Speex pairs the mic frame with the correct historical reference automatically.
+    pub fn capture(&self, rec_buffer: &[i16], out_buffer: &mut [i16]) {
+        unsafe {
+            aec_rs_sys::speex_echo_capture(self.echo_state, rec_buffer.as_ptr(), out_buffer.as_mut_ptr());
+            if let Some(preprocess_state) = self.preprocess_state {
+                aec_rs_sys::speex_preprocess_run(preprocess_state, out_buffer.as_mut_ptr());
+            }
+        }
+    }
+
+    /// Set Speex echo canceller sampling rate (defaults to 8000 if not set).
+    pub fn set_sampling_rate(&self, rate: u32) {
+        unsafe {
+            let mut r = rate as i32;
+            aec_rs_sys::speex_echo_ctl(
+                self.echo_state,
+                aec_rs_sys::SPEEX_ECHO_SET_SAMPLING_RATE as _,
+                &mut r as *mut _ as *mut std::os::raw::c_void,
+            );
+        }
+    }
 }
 
 impl Drop for Aec {
