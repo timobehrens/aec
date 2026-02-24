@@ -61,6 +61,27 @@ impl Aec {
                     aec_rs_sys::SPEEX_PREPROCESS_SET_ECHO_STATE as _,
                     echo_state as *mut c_void,
                 );
+
+                // Aggressively suppress residual echo (default -40 is OK for silence)
+                let mut echo_suppress: i32 = -60;
+                aec_rs_sys::speex_preprocess_ctl(
+                    den,
+                    aec_rs_sys::SPEEX_PREPROCESS_SET_ECHO_SUPPRESS as _,
+                    &mut echo_suppress as *mut _ as *mut c_void,
+                );
+
+                // KEY FIX: Default ECHO_SUPPRESS_ACTIVE is only -15 dB.
+                // During speech (Pframe→1), the preprocessor interpolates toward
+                // this value, providing almost zero additional suppression on top
+                // of the linear filter's ~15 dB. Set to -45 dB so the preprocessor
+                // aggressively suppresses residual echo even when speech is detected.
+                let mut echo_suppress_active: i32 = -60;
+                aec_rs_sys::speex_preprocess_ctl(
+                    den,
+                    aec_rs_sys::SPEEX_PREPROCESS_SET_ECHO_SUPPRESS_ACTIVE as _,
+                    &mut echo_suppress_active as *mut _ as *mut c_void,
+                );
+
                 Some(den)
             }
         } else {
