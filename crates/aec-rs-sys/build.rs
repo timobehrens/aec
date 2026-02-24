@@ -68,6 +68,13 @@ fn main() {
 
     let mut config = Config::new(&lib_dst);
 
+    // WASM has native floating-point support — use FLOATING_POINT for better
+    // precision in the AEC adaptive filter (fixed-point causes convergence
+    // issues at 24kHz due to reduced intermediate value precision).
+    if target.contains("wasm") {
+        config.define("USE_FIXED_POINT", "OFF");
+    }
+
     // Must set when compile for Android
     // Variables comes from cargo-ndk
     if let Ok(abi) = env::var("CARGO_NDK_ANDROID_TARGET") {
