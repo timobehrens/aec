@@ -39,6 +39,17 @@ impl Aec {
         let echo_state = unsafe {
             aec_rs_sys::speex_echo_state_init(config.frame_size as i32, config.filter_length)
         };
+
+        // Set sampling rate immediately — Speex defaults to 8000 Hz internally
+        unsafe {
+            let mut rate = config.sample_rate as i32;
+            aec_rs_sys::speex_echo_ctl(
+                echo_state,
+                aec_rs_sys::SPEEX_ECHO_SET_SAMPLING_RATE as _,
+                &mut rate as *mut _ as *mut c_void,
+            );
+        }
+
         let preprocess_state = if config.enable_preprocess {
             unsafe {
                 let den = aec_rs_sys::speex_preprocess_state_init(
